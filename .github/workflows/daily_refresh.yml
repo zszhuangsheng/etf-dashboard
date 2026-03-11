@@ -1,0 +1,28 @@
+name: Daily Data Refresh
+
+on:
+  schedule:
+    # 每天 UTC 21:30（美股收盘后约30分钟）自动触发
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch:   # 也可以在 GitHub 手动点击运行
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Ping Streamlit to refresh cache
+        run: |
+          echo "Data refresh triggered at $(date)"
+          # Streamlit Cloud 会在下次访问时自动重新拉取数据
+          # 因为我们用的是 yfinance 实时拉取 + st.cache_data(ttl=3600)
+          # 无需额外操作，缓存每小时自动失效
