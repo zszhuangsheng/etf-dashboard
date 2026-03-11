@@ -88,6 +88,42 @@ def fetch_both() -> tuple[pd.DataFrame, pd.DataFrame]:
     return schd, spy
 
 
+@st.cache_data(ttl=86400)
+def fetch_holdings(ticker: str) -> dict:
+    """拉取 ETF 持仓、行业分布、估值指标，失败时返回默认值"""
+    try:
+        t = yf.Ticker(ticker)
+        fd = t.funds_data
+
+        # 前 10 大持仓
+        top = fd.top_holdings.reset_index()
+        top.columns = ["symbol", "name", "weight"]
+        top["weight"] = (top["weight"] * 100).round(2)
+
+        # 行业分布
+        sector_map = {
+            "realestate": "房地产", "consumer_cyclical": "可选消费",
+            "basic_materials": "基础材料", "consumer_defensive": "必需消费",
+            "technology": "科技", "communication_services": "通信服务",
+            "financial_services": "金融", "utilities": "公用事业",
+            "industrials": "工业", "energy": "能源", "healthcare": "医疗保健",
+        }
+        raw_sectors = fd.sector_weightings
+        sectors = {sector_map.get(k, k): round(v * 100, 2) for k, v in raw_sectors.items() if v > 0}
+
+        # 估值指标
+        eq = fd.equity_holdings
+        valuations = {}
+        for label in eq.index:
+            val = eq.loc[label, ticker]
+            if pd.notna(val):
+                valuations[label] = round(float(val), 2)
+
+        return {"holdings": top.to_dict("records"), "sectors": sectors, "valuations": valuations}
+    except Exception:
+        return {"holdings": [], "sectors": {}, "valuations": {}}
+
+
 def calc_drawdown_buckets(df: pd.DataFrame) -> pd.DataFrame:
     """
     找出每次完整的回调事件（从高点到谷底到恢复）
