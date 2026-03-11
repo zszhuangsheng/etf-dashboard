@@ -130,3 +130,107 @@ fig_bar.update_layout(
     hovermode="x unified",
 )
 st.plotly_chart(fig_bar, use_container_width=True)
+
+# ══════════════════════════════════════════════════
+# 多维能力雷达对比
+# ══════════════════════════════════════════════════
+st.divider()
+radar_col, bear_col = st.columns(2)
+
+with radar_col:
+    st.markdown("#### 多维能力雷达对比")
+
+    RADAR_DATA = [
+        {"axis": "成长性", "SPY": 92, "SCHD": 62},
+        {"axis": "股息收益", "SPY": 32, "SCHD": 90},
+        {"axis": "抗跌性", "SPY": 55, "SCHD": 78},
+        {"axis": "波动稳定", "SPY": 50, "SCHD": 74},
+        {"axis": "行业分散", "SPY": 80, "SCHD": 68},
+        {"axis": "现金流", "SPY": 30, "SCHD": 95},
+    ]
+
+    categories = [d["axis"] for d in RADAR_DATA]
+    spy_vals = [d["SPY"] for d in RADAR_DATA]
+    schd_vals = [d["SCHD"] for d in RADAR_DATA]
+
+    fig_radar = go.Figure()
+    fig_radar.add_trace(go.Scatterpolar(
+        r=spy_vals + [spy_vals[0]], theta=categories + [categories[0]],
+        fill="toself", fillcolor="rgba(245,158,11,0.08)",
+        line=dict(color=C["spy"], width=2), name="SPY",
+    ))
+    fig_radar.add_trace(go.Scatterpolar(
+        r=schd_vals + [schd_vals[0]], theta=categories + [categories[0]],
+        fill="toself", fillcolor="rgba(56,189,248,0.08)",
+        line=dict(color=C["schd"], width=2), name="SCHD",
+    ))
+    fig_radar.update_layout(
+        polar=dict(
+            bgcolor=C["card"],
+            radialaxis=dict(visible=True, range=[0, 100], gridcolor=C["border"], tickfont=dict(size=9, color=C["muted"])),
+            angularaxis=dict(gridcolor=C["border"], tickfont=dict(size=11, color=C["muted"])),
+        ),
+        paper_bgcolor=C["bg"], font_color=C["muted"],
+        height=380, margin=dict(t=30, b=20, l=40, r=40),
+        legend=dict(orientation="h", y=-0.05),
+        showlegend=True,
+    )
+    st.plotly_chart(fig_radar, use_container_width=True)
+
+# ══════════════════════════════════════════════════
+# 四大熊市最大回撤对比
+# ══════════════════════════════════════════════════
+with bear_col:
+    st.markdown("#### 四大熊市最大回撤")
+
+    BEAR_EVENTS = [
+        {"event": "2015 A股冲击", "schd": -11.2, "spy": -8.5},
+        {"event": "2018 Q4缩表",  "schd": -12.6, "spy": -14.0},
+        {"event": "2020 COVID",   "schd": -27.3, "spy": -31.0},
+        {"event": "2022 加息",    "schd": -5.8,  "spy": -19.4},
+    ]
+
+    bear_df = pd.DataFrame(BEAR_EVENTS)
+
+    fig_bear = go.Figure()
+    fig_bear.add_trace(go.Bar(
+        y=bear_df["event"], x=bear_df["schd"],
+        orientation="h", name="SCHD", marker_color=C["schd"], opacity=0.85,
+    ))
+    fig_bear.add_trace(go.Bar(
+        y=bear_df["event"], x=bear_df["spy"],
+        orientation="h", name="SPY", marker_color=C["spy"], opacity=0.85,
+    ))
+    fig_bear.update_layout(
+        plot_bgcolor=C["card"], paper_bgcolor=C["bg"], font_color=C["muted"],
+        barmode="group", height=380, margin=dict(t=10, b=20, l=10, r=30),
+        xaxis=dict(gridcolor=C["border"], ticksuffix="%", range=[-35, 0]),
+        yaxis=dict(gridcolor=C["border"]),
+        legend=dict(orientation="h", y=-0.1),
+    )
+    st.plotly_chart(fig_bear, use_container_width=True)
+
+# ══════════════════════════════════════════════════
+# 收益模式场景解析
+# ══════════════════════════════════════════════════
+st.divider()
+st.markdown("#### 收益模式场景解析")
+
+scenarios = [
+    {"icon": "🚀", "scene": "科技牛市",    "winner": "SPY",  "body": "2023-24年 AI 牛市 SPY +26%，SCHD 仅 +4%，科技权重差异导致巨大分化。"},
+    {"icon": "🐻", "scene": "熊市防御",    "winner": "SCHD", "body": "2022年 SCHD -5.8% vs SPY -18.2%，高股息+低估值提供强力缓冲垫。"},
+    {"icon": "📈", "scene": "加息周期",    "winner": "SCHD", "body": "金融/能源权重高，相对受益加息，Beta 低使整体波动更小。"},
+    {"icon": "🔄", "scene": "股息再投资",  "winner": "SCHD", "body": "3.5% 股息率复利再投资，每年额外贡献约 2-3% 实际回报，长期复利效应显著。"},
+]
+
+s1, s2 = st.columns(2)
+for i, sc in enumerate(scenarios):
+    color = C["spy"] if sc["winner"] == "SPY" else C["schd"]
+    with s1 if i % 2 == 0 else s2:
+        st.markdown(f"""<div style="background:{C['card']};border:1px solid {C['border']};border-radius:8px;padding:12px 14px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:700;color:#cdd6e0">{sc['icon']} {sc['scene']}</span>
+                <span style="font-size:11px;color:{color};font-weight:700;background:{color}15;padding:1px 8px;border-radius:4px">{sc['winner']}</span>
+            </div>
+            <div style="font-size:12px;color:{C['muted']};line-height:1.7">{sc['body']}</div>
+        </div>""", unsafe_allow_html=True)

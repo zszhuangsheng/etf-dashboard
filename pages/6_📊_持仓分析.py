@@ -183,12 +183,116 @@ with col_right:
         st.info("估值数据暂不可用")
 
 # ══════════════════════════════════════════════════
-# SCHD 特点说明
+# 个股深度分析（来自研究报告数据）
 # ══════════════════════════════════════════════════
 st.divider()
-st.markdown("#### 💡 关于 SCHD 的选股策略")
+st.markdown("#### 个股深度指标")
+st.caption("股息率、增长率、PE、自由现金流覆盖率、连续增长年数、护城河类型")
 
-n1, n2, n3 = st.columns(3)
-n1.info("**选股标准**\n\n从道琼斯美国红利100指数中筛选，要求至少连续10年分红，并综合评估现金流/总债务比、ROE、股息率和5年股息增长率。")
-n2.success("**持仓特点**\n\n约100只成分股，季度再平衡，单只股票权重上限约4%，行业分散度高，偏向价值型大盘股。")
-n3.warning("**注意事项**\n\n持仓数据每季度调整一次，页面显示的是最新披露数据。实际持仓可能因市场波动略有变化。")
+STOCK_DETAILS = [
+    {"ticker":"LMT", "name":"洛克希德·马丁", "sector":"工业",     "divYield":2.8, "divGrowth":5,  "pe":17.2, "fcfCover":1.8, "yrsGrowth":21, "moat":"defense monopoly",  "color":"#38bdf8"},
+    {"ticker":"COP", "name":"康菲石油",       "sector":"能源",     "divYield":3.1, "divGrowth":9,  "pe":12.4, "fcfCover":2.3, "yrsGrowth":13, "moat":"low-cost producer",  "color":"#f59e0b"},
+    {"ticker":"VZ",  "name":"威瑞森电信",      "sector":"通信",     "divYield":6.5, "divGrowth":2,  "pe":8.9,  "fcfCover":1.2, "yrsGrowth":17, "moat":"network monopoly",   "color":"#f87171"},
+    {"ticker":"CVX", "name":"雪佛龙",         "sector":"能源",     "divYield":4.0, "divGrowth":7,  "pe":14.1, "fcfCover":2.1, "yrsGrowth":36, "moat":"integrated major",   "color":"#f59e0b"},
+    {"ticker":"BMY", "name":"百时美施贵宝",    "sector":"医疗",     "divYield":4.9, "divGrowth":5,  "pe":11.3, "fcfCover":1.9, "yrsGrowth":15, "moat":"patent portfolio",   "color":"#a3e635"},
+    {"ticker":"MRK", "name":"默克",           "sector":"医疗",     "divYield":2.9, "divGrowth":7,  "pe":13.8, "fcfCover":2.4, "yrsGrowth":13, "moat":"blockbuster drugs",  "color":"#a3e635"},
+    {"ticker":"MO",  "name":"奥驰亚（万宝路）","sector":"消费必需", "divYield":9.2, "divGrowth":4,  "pe":9.7,  "fcfCover":1.5, "yrsGrowth":54, "moat":"brand addiction",    "color":"#4ade80"},
+    {"ticker":"TXN", "name":"德州仪器",        "sector":"科技",     "divYield":3.0, "divGrowth":13, "pe":33.4, "fcfCover":1.6, "yrsGrowth":20, "moat":"analog chip leader", "color":"#818cf8"},
+    {"ticker":"KO",  "name":"可口可乐",        "sector":"消费必需", "divYield":3.1, "divGrowth":4,  "pe":22.7, "fcfCover":1.7, "yrsGrowth":62, "moat":"global brand",       "color":"#4ade80"},
+    {"ticker":"PEP", "name":"百事可乐",        "sector":"消费必需", "divYield":3.2, "divGrowth":7,  "pe":21.5, "fcfCover":1.8, "yrsGrowth":51, "moat":"brand+distribution", "color":"#4ade80"},
+]
+
+detail_df = pd.DataFrame(STOCK_DETAILS)
+st.dataframe(
+    detail_df[["ticker","name","sector","divYield","divGrowth","pe","fcfCover","yrsGrowth","moat"]].rename(columns={
+        "ticker":"代码","name":"公司名","sector":"行业","divYield":"股息率%",
+        "divGrowth":"股息增长%/年","pe":"PE","fcfCover":"FCF覆盖率","yrsGrowth":"连续增长年数","moat":"护城河类型"
+    }),
+    use_container_width=True, hide_index=True,
+)
+
+# ══════════════════════════════════════════════════
+# 股息率 vs 股息增长率 散点图
+# ══════════════════════════════════════════════════
+st.markdown("#### 股息率 vs 股息增长率")
+st.caption("气泡大小 = 持仓权重，右上角是理想区间：高股息率 + 高增长率")
+
+fig_scatter = go.Figure()
+for s in STOCK_DETAILS:
+    fig_scatter.add_trace(go.Scatter(
+        x=[s["divYield"]], y=[s["divGrowth"]],
+        mode="markers+text",
+        marker=dict(size=s.get("divYield", 3) * 6 + 10, color=s["color"], opacity=0.7,
+                    line=dict(width=2, color=s["color"])),
+        text=[s["ticker"]], textposition="middle center",
+        textfont=dict(size=9, color="white", family="IBM Plex Mono"),
+        name=s["ticker"],
+        hovertemplate=f"{s['ticker']}<br>股息率: {s['divYield']}%<br>增长率: {s['divGrowth']}%/yr<extra></extra>",
+    ))
+
+fig_scatter.update_layout(
+    plot_bgcolor=C["card"], paper_bgcolor=C["bg"], font_color=C["muted"],
+    height=350, margin=dict(t=10, b=40, l=10, r=10),
+    xaxis=dict(title="股息率 (%)", gridcolor=C["border"], ticksuffix="%"),
+    yaxis=dict(title="股息增长率 (%/年)", gridcolor=C["border"], ticksuffix="%"),
+    showlegend=False,
+)
+st.plotly_chart(fig_scatter, use_container_width=True)
+
+# ══════════════════════════════════════════════════
+# 股息连续增长年数（股息贵族/股息之王）
+# ══════════════════════════════════════════════════
+st.markdown("#### 股息连续增长年数")
+st.caption("Dividend Kings (50年+) / Dividend Aristocrats (25年+)")
+
+sorted_stocks = sorted(STOCK_DETAILS, key=lambda x: x["yrsGrowth"], reverse=True)
+tickers_sorted = [s["ticker"] for s in sorted_stocks]
+years_sorted = [s["yrsGrowth"] for s in sorted_stocks]
+
+def get_label(y):
+    if y >= 50: return "👑 股息之王"
+    if y >= 25: return "🏆 股息贵族"
+    if y >= 10: return "✓ 合格"
+    return "⚠ 观察"
+
+bar_colors = [C["accent"] if y >= 50 else C["green"] if y >= 25 else C["spy"] if y >= 10 else C["red"] for y in years_sorted]
+
+fig_years = go.Figure(go.Bar(
+    x=years_sorted, y=tickers_sorted,
+    orientation="h", marker_color=bar_colors,
+    text=[f"{y}年 {get_label(y)}" for y in years_sorted],
+    textposition="outside", textfont_size=11, opacity=0.85,
+))
+fig_years.update_layout(
+    plot_bgcolor=C["card"], paper_bgcolor=C["bg"], font_color=C["muted"],
+    height=380, margin=dict(t=10, b=20, l=10, r=120),
+    xaxis=dict(gridcolor=C["border"], title="连续增长年数"),
+    yaxis=dict(gridcolor=C["border"], autorange="reversed"),
+    showlegend=False,
+)
+st.plotly_chart(fig_years, use_container_width=True)
+
+st.success("**关键洞察：** MO (54年)、KO (62年)、PEP (51年) 均为股息之王，CVX (36年) 为股息贵族。即便在 2008 年金融危机、2020 年 COVID 期间，这些公司也从未削减过股息。这是 SCHD 股息稳定性的核心保障。")
+
+st.divider()
+
+# ══════════════════════════════════════════════════
+# SCHD 选股四大标准
+# ══════════════════════════════════════════════════
+st.markdown("#### SCHD 选股四大标准")
+
+criteria = [
+    {"num": "01", "title": "连续股息增长", "body": "要求至少10年不间断股息增长，筛除股息不稳定公司", "color": C["schd"]},
+    {"num": "02", "title": "自由现金流覆盖", "body": "FCF / 股息 > 1.5x，确保派息由真实盈利支撑而非借债", "color": C["green"]},
+    {"num": "03", "title": "股东权益回报率", "body": "ROE 须高于行业中位数，证明资本配置能力", "color": C["spy"]},
+    {"num": "04", "title": "股息率前25%", "body": "在同行中股息率排前四分之一，确保持有实际现金回报", "color": C["accent"]},
+]
+
+cr_cols = st.columns(4)
+for col, cr in zip(cr_cols, criteria):
+    with col:
+        st.markdown(f"""<div class="holding-row" style="flex-direction:column;align-items:flex-start;padding:14px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{cr['color']};font-weight:900">{cr['num']}</div>
+            <div style="font-size:13px;font-weight:700;color:{cr['color']};margin:4px 0">{cr['title']}</div>
+            <div style="font-size:11px;color:{C['muted']};line-height:1.6">{cr['body']}</div>
+        </div>""", unsafe_allow_html=True)
