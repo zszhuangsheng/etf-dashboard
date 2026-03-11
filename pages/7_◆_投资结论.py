@@ -33,6 +33,9 @@ st.divider()
 # ══════════════════════════════════════════════════
 col_spy, col_schd = st.columns(2)
 
+green = C["green"]
+red = C["red"]
+
 with col_spy:
     st.markdown(f"""<div class="verdict-card" style="border-top:4px solid {C['spy']}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
@@ -44,15 +47,15 @@ with col_spy:
         </div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown(f"**:green[优势]**")
+    st.markdown("**:green[优势]**")
     for s in ["科技驱动长期高 CAGR (~13.5%)", "流动性极强，交易成本最低", "S&P500 标准基准，分散度高", "牛市捕获能力强"]:
-        st.markdown(f"<div class='str-item'><span style='color:{C[\"green\"]}'>+</span> {s}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='str-item'><span style='color:{green}'>+</span> {s}</div>", unsafe_allow_html=True)
 
-    st.markdown(f"**:red[风险]**")
+    st.markdown("**:red[风险]**")
     for w in ["熊市跌幅大，-18.2% (2022)", "股息低 (1.4%)，退休现金流不足", "科技股集中风险"]:
-        st.markdown(f"<div class='str-item'><span style='color:{C[\"red\"]}'>-</span> {w}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='str-item'><span style='color:{red}'>-</span> {w}</div>", unsafe_allow_html=True)
 
-    st.info(f"**最佳场景：** 20-40岁积累期 / 牛市环境")
+    st.info("**最佳场景：** 20-40岁积累期 / 牛市环境")
 
 with col_schd:
     st.markdown(f"""<div class="verdict-card" style="border-top:4px solid {C['schd']}">
@@ -65,15 +68,15 @@ with col_schd:
         </div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown(f"**:green[优势]**")
+    st.markdown("**:green[优势]**")
     for s in ["高股息 (3.5%) + 年增长 ~10%", "熊市防御强，Beta 0.75", "选股质量高，ROE/FCF 筛选", "持股心理舒适度高"]:
-        st.markdown(f"<div class='str-item'><span style='color:{C[\"green\"]}'>+</span> {s}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='str-item'><span style='color:{green}'>+</span> {s}</div>", unsafe_allow_html=True)
 
-    st.markdown(f"**:red[风险]**")
+    st.markdown("**:red[风险]**")
     for w in ["牛市跑输 SPY，错过科技溢价", "成长周期中明显落后", "持仓集中度相对高"]:
-        st.markdown(f"<div class='str-item'><span style='color:{C[\"red\"]}'>-</span> {w}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='str-item'><span style='color:{red}'>-</span> {w}</div>", unsafe_allow_html=True)
 
-    st.info(f"**最佳场景：** 退休 / 现金流需求 / 熊市环境")
+    st.info("**最佳场景：** 退休 / 现金流需求 / 熊市环境")
 
 st.divider()
 
