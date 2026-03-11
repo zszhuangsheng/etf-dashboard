@@ -55,13 +55,13 @@ with st.sidebar:
     current_assets = st.number_input(
         "💰 现有可投资资产（$）",
         min_value=0, max_value=5_000_000,
-        value=150_000, step=10_000,
+        value=100_000, step=10_000,
         format="%d"
     )
     monthly_invest = st.number_input(
         "📥 每月定投金额（$）",
         min_value=0, max_value=50_000,
-        value=2_000, step=100,
+        value=1_000, step=100,
         format="%d"
     )
 
