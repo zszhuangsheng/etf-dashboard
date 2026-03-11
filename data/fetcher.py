@@ -5,14 +5,29 @@ data/fetcher.py
 import yfinance as yf
 import pandas as pd
 import streamlit as st
+import time
 from datetime import datetime, timedelta
 
 
-@st.cache_data(ttl=3600)   # 缓存 1 小时，避免重复请求
+def _yf_history_with_retry(ticker: str, period: str = "max", max_retries: int = 3) -> pd.DataFrame:
+    """带重试和退避的 yfinance 历史数据请求"""
+    for attempt in range(max_retries):
+        try:
+            t = yf.Ticker(ticker)
+            hist = t.history(period=period, auto_adjust=False)
+            if not hist.empty:
+                return hist
+        except Exception:
+            pass
+        if attempt < max_retries - 1:
+            time.sleep(2 ** attempt)  # 1s, 2s 退避
+    return pd.DataFrame()
+
+
+@st.cache_data(ttl=86400)   # 缓存 24 小时，大幅减少请求量
 def fetch_history(ticker: str, period: str = "max") -> pd.DataFrame:
     """拉取历史价格 + 股息，返回月度数据"""
-    t    = yf.Ticker(ticker)
-    hist = t.history(period=period, auto_adjust=False)
+    hist = _yf_history_with_retry(ticker, period)
 
     if hist.empty:
         return pd.DataFrame()
@@ -35,25 +50,33 @@ def fetch_history(ticker: str, period: str = "max") -> pd.DataFrame:
     return df.dropna(subset=["monthly_return"])
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=86400)
 def fetch_info(ticker: str) -> dict:
-    """拉取基本面信息"""
-    t    = yf.Ticker(ticker)
-    info = t.info
-    return {
-        "price":          info.get("regularMarketPrice") or info.get("previousClose", 0),
-        "dividend_yield": round((info.get("trailingAnnualDividendYield") or 0) * 100, 2),
-        "expense_ratio":  round((info.get("annualReportExpenseRatio") or 0) * 100, 2),
-        "beta":           info.get("beta3Year") or info.get("beta", 1.0),
-        "name":           info.get("longName", ticker),
-        "ytd_return":     round((info.get("ytdReturn") or 0) * 100, 2),
-    }
+    """拉取基本面信息，失败时返回默认值"""
+    try:
+        t    = yf.Ticker(ticker)
+        info = t.info
+        return {
+            "price":          info.get("regularMarketPrice") or info.get("previousClose", 0),
+            "dividend_yield": round((info.get("trailingAnnualDividendYield") or 0) * 100, 2),
+            "expense_ratio":  round((info.get("annualReportExpenseRatio") or 0) * 100, 2),
+            "beta":           info.get("beta3Year") or info.get("beta", 1.0),
+            "name":           info.get("longName", ticker),
+            "ytd_return":     round((info.get("ytdReturn") or 0) * 100, 2),
+        }
+    except Exception:
+        defaults = {
+            "SCHD": {"price": 28.0, "dividend_yield": 3.50, "expense_ratio": 0.06, "beta": 0.75, "name": "Schwab U.S. Dividend Equity ETF", "ytd_return": 0.0},
+            "SPY":  {"price": 580.0, "dividend_yield": 1.30, "expense_ratio": 0.09, "beta": 1.0, "name": "SPDR S&P 500 ETF Trust", "ytd_return": 0.0},
+        }
+        return defaults.get(ticker, {"price": 0, "dividend_yield": 0, "expense_ratio": 0, "beta": 1.0, "name": ticker, "ytd_return": 0})
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=86400)
 def fetch_both() -> tuple[pd.DataFrame, pd.DataFrame]:
     """同时拉 SCHD 和 SPY，返回 (schd_df, spy_df)"""
     schd = fetch_history("SCHD")
+    time.sleep(1)  # 请求间隔，避免限流
     spy  = fetch_history("SPY")
 
     # 对齐时间范围（取两者都有数据的区间）

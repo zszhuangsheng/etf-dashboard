@@ -26,11 +26,11 @@ st.markdown("##### SCHD 历史回撤深度 · 概率分布 · 恢复时间")
 st.divider()
 
 # ── 加载数据 ──────────────────────────────────────
-with st.spinner("正在从 Yahoo Finance 拉取最新数据..."):
+with st.spinner("正在加载数据（每 24 小时自动刷新）..."):
     df = fetch_history("SCHD")
 
 if df.empty:
-    st.error("数据加载失败，请检查网络连接")
+    st.error("数据加载失败，请稍后刷新重试")
     st.stop()
 
 last_update = df.index.max().strftime("%Y-%m-%d")
