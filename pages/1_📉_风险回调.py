@@ -1,5 +1,5 @@
 """
-pages/1_◉_风险回调.py
+pages/1_📉_风险回调.py
 SCHD 历史回撤深度、概率分布、恢复时间、风险指标、熊市对比
 """
 import streamlit as st
@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from data.fetcher import fetch_history, fetch_both, calc_drawdown_buckets
 
-st.set_page_config(page_title="风险回调", page_icon="◉", layout="wide")
+st.set_page_config(page_title="风险回调", page_icon="📉", layout="wide")
 
 st.markdown("""
 <style>
@@ -26,7 +26,7 @@ html, body, [class*="css"] { font-family:'Noto Sans SC',sans-serif; background:#
 C = {"schd":"#38bdf8","spy":"#f59e0b","green":"#4ade80","red":"#f87171",
      "accent":"#a3e635","bg":"#07090e","card":"#0c1018","border":"#1c2535","muted":"#4e6278"}
 
-st.markdown("# ◉ 风险与回调分析")
+st.markdown("# 📉 风险与回调分析")
 st.markdown("##### SCHD 历史回撤 · 概率分布 · 恢复时间 · 风险指标")
 st.divider()
 
